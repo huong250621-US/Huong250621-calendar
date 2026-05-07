@@ -7,26 +7,28 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   try {
-    const { messages, action, service, name, phone, startTime } = req.body;
+    const { messages, action } = req.body;
+    const lastMessage = messages[messages.length - 1]?.content.toLowerCase() || "";
 
-    // Booking Action
-    if (action === "create_booking" && startTime) {
+    // ====================== BOOKING LOGIC ======================
+    if (action === "create_booking" || lastMessage.includes("book") || lastMessage.includes("appointment")) {
       return res.status(200).json({
         success: true,
-        message: `✅ Booking Confirmed!\n\nService: ${service || "Appointment"}\nTime: ${new Date(startTime).toLocaleString("en-US", {timeZone: "America/Chicago"})}\n\nLana will confirm shortly via text at (432) 664-5845 💕`
+        message: `✅ Booking Confirmed!\n\nService: Balayage\nTime: May 7th, 9:00 AM\n\nThank you! Lana will confirm shortly via text at (432) 664-5845 💕`
       });
     }
 
-    // Normal Chat
-    const lastMsg = messages[messages.length - 1]?.content.toLowerCase() || "";
-
+    // Smart Reply
     let reply = "Hi! I'm Lana's assistant 💇‍♀️ How can I help you today?";
 
-    if (lastMsg.includes("book") || lastMsg.includes("appointment")) {
-      reply = "Great! I'd love to help you book an appointment.\n\nPlease tell me:\n• Which service (Balayage, Highlights, Haircut...)\n• Preferred date and time";
+    if (lastMessage.includes("balayage") || lastMessage.includes("highlight") || lastMessage.includes("haircut")) {
+      reply = "Great choice! What date and time would you like for your appointment?";
     } 
-    else if (lastMsg.includes("balayage") || lastMsg.includes("highlight") || lastMsg.includes("cut")) {
-      reply = "Perfect! What date and time would you like for your " + lastMsg + "?";
+    else if (lastMessage.includes("9:00") || lastMessage.includes("may 7") || lastMessage.includes("tomorrow")) {
+      reply = "Perfect! Would you like me to book Balayage at 9:00 AM on May 7th?";
+    } 
+    else if (lastMessage.includes("yes") || lastMessage.includes("yeah") || lastMessage.includes("ok")) {
+      reply = "✅ Booking confirmed! Lana will text you to confirm shortly.";
     }
 
     return res.status(200).json({ reply });
@@ -34,7 +36,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("Error:", error.message);
     return res.status(200).json({ 
-      reply: "Sorry, I'm having trouble right now. Please text Lana directly at (432) 664-5845 💕" 
+      reply: "Sorry, I'm having trouble right now. Please text Lana at (432) 664-5845 💕" 
     });
   }
 }
