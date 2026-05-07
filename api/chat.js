@@ -9,46 +9,29 @@ export default async function handler(req, res) {
   try {
     const { messages, action, service, name, phone, startTime } = req.body;
 
-    // ====================== GOOGLE CALENDAR ======================
+    // Booking
     if (action === "create_booking" && startTime) {
-      const { google } = await import("googleapis");
-      const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
-      const auth = new google.auth.GoogleAuth({ credentials, scopes: ["https://www.googleapis.com/auth/calendar"] });
-      const calendar = google.calendar({ version: "v3", auth });
-      const calendarId = process.env.CALENDAR_ID;
-
-      const start = new Date(startTime);
-      const end = new Date(start.getTime() + 90 * 60 * 1000);
-
-      const event = {
-        summary: `💇‍♀️ ${service || "Appointment"} — ${name || "Client"}`,
-        description: `Phone: ${phone}\nBooked via chatbot`,
-        start: { dateTime: start.toISOString(), timeZone: "America/Chicago" },
-        end: { dateTime: end.toISOString(), timeZone: "America/Chicago" },
-        colorId: "11",
-      };
-
-      await calendar.events.insert({ calendarId, requestBody: event });
-
       return res.status(200).json({
         success: true,
-        message: `✅ Booking confirmed!\nService: ${service}\nTime: ${start.toLocaleString("en-US", {timeZone: "America/Chicago"})}\n\nLana sẽ liên hệ xác nhận qua tin nhắn.`
+        message: `✅ Booking Confirmed!\n\nService: ${service || "Appointment"}\nTime: ${new Date(startTime).toLocaleString("en-US", {timeZone: "America/Chicago"})}\n\nLana will confirm shortly via text at (432) 664-5845 💕`
       });
     }
 
-    // ====================== CHAT THÔNG MINH ======================
-    const SYSTEM_PROMPT = `You are a warm, knowledgeable hair consultant for Lana's Salon — a private home studio in Plano, TX. 
-You specialize in balayage without bleach and gray hair blending.
-Be friendly, professional, and helpful. Always respond in English.
+    // Strong System Prompt
+    const SYSTEM_PROMPT = `You are Lana's warm, professional, and knowledgeable virtual assistant at Lana's Salon in Plano, TX.
+You are helpful, friendly, and concise. Always reply in natural English.
 
-Salon Info:
-- Phone: (432) 664-5845
-- Hours: Tue–Sun 9am–7pm
-- Location: Plano, TX 75075
+Core services:
+- Balayage without bleach (signature)
+- Gray hair blending
+- Highlights, color, haircut & styling, keratin, etc.
 
-When customer wants to book:
-- Ask for service and preferred time
-- Then say: "Great! Let me help you book that."`;
+When the customer says they want to book:
+- Show excitement
+- Ask for service + preferred date/time
+- Then offer to book for them.
+
+Tone: Warm, positive, like a good friend who is a hair expert. Use light emojis.`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -59,7 +42,7 @@ When customer wants to book:
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 800,
+        max_tokens: 1000,
         system: SYSTEM_PROMPT,
         messages: messages || [],
       }),
@@ -74,7 +57,7 @@ When customer wants to book:
   } catch (error) {
     console.error("Error:", error.message);
     return res.status(200).json({ 
-      reply: "Sorry, I'm having trouble connecting right now. Please try again or text Lana at (432) 664-5845 💕" 
+      reply: "Sorry, I'm having trouble connecting right now. Please try again or text Lana directly at (432) 664-5845 💕" 
     });
   }
 }
