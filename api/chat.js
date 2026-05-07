@@ -7,17 +7,26 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   try {
-    const { messages } = req.body;
+    const { messages, action, service, name, phone, startTime } = req.body;
 
-    // Simple response for testing
-    const lastMessage = messages[messages.length - 1]?.content || "Hello";
+    // Booking Action
+    if (action === "create_booking" && startTime) {
+      return res.status(200).json({
+        success: true,
+        message: `✅ Booking Confirmed!\n\nService: ${service || "Appointment"}\nTime: ${new Date(startTime).toLocaleString("en-US", {timeZone: "America/Chicago"})}\n\nLana will confirm shortly via text at (432) 664-5845 💕`
+      });
+    }
 
-    let reply = "Hi! I'm Lana's assistant. How can I help you today? 💇‍♀️";
+    // Normal Chat
+    const lastMsg = messages[messages.length - 1]?.content.toLowerCase() || "";
 
-    if (lastMessage.toLowerCase().includes("book") || lastMessage.toLowerCase().includes("appointment")) {
-      reply = "Great! I'd love to help you book an appointment. Please tell me which service you want and your preferred date/time.";
-    } else if (lastMessage.toLowerCase().includes("price") || lastMessage.toLowerCase().includes("cost")) {
-      reply = "Here are our prices:\n• Balayage: $150–$220\n• Haircut + Styling: $40–$65\n• Highlights: $100–$200";
+    let reply = "Hi! I'm Lana's assistant 💇‍♀️ How can I help you today?";
+
+    if (lastMsg.includes("book") || lastMsg.includes("appointment")) {
+      reply = "Great! I'd love to help you book an appointment.\n\nPlease tell me:\n• Which service (Balayage, Highlights, Haircut...)\n• Preferred date and time";
+    } 
+    else if (lastMsg.includes("balayage") || lastMsg.includes("highlight") || lastMsg.includes("cut")) {
+      reply = "Perfect! What date and time would you like for your " + lastMsg + "?";
     }
 
     return res.status(200).json({ reply });
