@@ -61,7 +61,7 @@ TONE: Warm, friendly, confident. Concise. Light emojis 💇‍♀️✨. Never i
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
+        model: "claude-3-5-sonnet-20241022",
         max_tokens: 1000,
         system: SYSTEM_PROMPT,
         messages,
@@ -69,13 +69,23 @@ TONE: Warm, friendly, confident. Concise. Light emojis 💇‍♀️✨. Never i
     });
 
     const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error: data });
+
+    // Debug log — xem trong Vercel Logs
+    console.log("Anthropic status:", response.status);
+    console.log("Anthropic response:", JSON.stringify(data).slice(0, 300));
+
+    if (!response.ok) {
+      console.error("Anthropic error:", data);
+      return res.status(200).json({
+        reply: "Sorry, I'm having trouble right now. Please text Lana at (432) 664-5845 💕"
+      });
+    }
 
     return res.status(200).json({ reply: data.content?.[0]?.text });
 
   } catch (error) {
     console.error("Chat error:", error.message);
-    return res.status(500).json({
+    return res.status(200).json({
       reply: "Sorry, I'm having trouble right now. Please text Lana at (432) 664-5845 💕"
     });
   }
