@@ -9,8 +9,9 @@ export default async function handler(req, res) {
   try {
     const { messages, action, service, name, phone, startTime } = req.body;
 
+    // Google Calendar
     const { google } = await import("googleapis");
-    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT || '{}');
     
     const auth = new google.auth.GoogleAuth({
       credentials,
@@ -19,40 +20,28 @@ export default async function handler(req, res) {
 
     const calendar = google.calendar({ version: "v3", auth });
     const calendarId = process.env.CALENDAR_ID;
-    const TIMEZONE = "America/Chicago";
 
-    // ====================== CREATE BOOKING ======================
+    // Create Booking
     if (action === "create_booking") {
-      if (!name || !phone || !service || !startTime) {
-        return res.status(400).json({ error: "Missing booking information" });
-      }
-
-      const duration = 90; // 90 phút mặc định, bạn có thể thay đổi sau
-      const start = new Date(startTime);
-      const end = new Date(start.getTime() + duration * 60 * 1000);
-
+      const start = new Date(startTime || Date.now() + 86400000);
       const event = {
-        summary: `💇‍♀️ ${service} — ${name}`,
-        description: `Client: ${name}\nPhone: ${phone}\nService: ${service}\nBooked via AI Chatbot`,
-        start: { dateTime: start.toISOString(), timeZone: TIMEZONE },
-        end: { dateTime: end.toISOString(), timeZone: TIMEZONE },
+        summary: `💇‍♀️ ${service || "Appointment"} — ${name || "Client"}`,
+        description: `Phone: ${phone || ""}\nBooked via chatbot`,
+        start: { dateTime: start.toISOString(), timeZone: "America/Chicago" },
+        end: { dateTime: new Date(start.getTime() + 7200000).toISOString(), timeZone: "America/Chicago" },
         colorId: "11",
       };
 
-      const result = await calendar.events.insert({
-        calendarId,
-        requestBody: event,
-      });
+      const result = await calendar.events.insert({ calendarId, requestBody: event });
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         success: true,
-        message: `✅ Booking confirmed!\n\nService: ${service}\nTime: ${start.toLocaleString("en-US", {timeZone: TIMEZONE})}\n\nLana will confirm shortly via text.`,
-        eventId: result.data.id
+        message: `✅ Booking confirmed! Service: ${service}\nTime: ${start.toLocaleString("en-US", {timeZone: "America/Chicago"})}\nLana will confirm shortly via text.`
       });
     }
 
-    // ====================== NORMAL CHAT ======================
-    const SYSTEM_PROMPT = `You are a warm, knowledgeable hair consultant for Lana's Salon... (giữ nguyên system prompt cũ của bạn)`;
+    // Normal Chat
+    const SYSTEM_PROMPT = `You are a warm, knowledgeable hair consultant for Lana's Salon. Always respond in English. Be helpful and friendly.`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -63,7 +52,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 1000,
+        max_tokens: 800,
         system: SYSTEM_PROMPT,
         messages,
       }),
@@ -71,9 +60,12 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    if (!response.ok) return res.status(response.status).json({ error: data });
+    if (!response.ok) {
+      console.error("Anthropic error:", data);
+      return res.status(500).json({ error: "API error" });
+    }
 
-    return res.status(200).json({ reply: data.content?.[0]?.text });
+    return res.status(200).json({ reply: data.content?.[0]?.text || "Sorry, I didn't understand." });
 
   } catch (error) {
     console.error("Chat error:", error.message);
