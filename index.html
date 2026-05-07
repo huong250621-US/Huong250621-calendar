@@ -6,48 +6,45 @@
   <title>Lana's Salon - Chat & Book</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body { font-family: 'Segoe UI', system-ui, sans-serif; }
-    .chat-container { max-width: 420px; margin: 20px auto; }
-  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100">
 
-  <div class="chat-container bg-white shadow-2xl rounded-2xl overflow-hidden border border-gray-200">
-    
+  <div class="max-w-md mx-auto mt-6 bg-white shadow-2xl rounded-3xl overflow-hidden">
     <!-- Header -->
-    <div class="bg-pink-600 text-white p-4 flex items-center gap-3">
-      <img src="https://via.placeholder.com/60" id="avatar" alt="Lana" class="w-12 h-12 rounded-full object-cover border-2 border-white">
-      <div>
-        <h1 class="font-semibold text-lg">Lana's Salon</h1>
-        <p class="text-sm opacity-90">Plano, TX • Online Assistant</p>
+    <div class="bg-gradient-to-r from-pink-600 to-rose-500 text-white p-5">
+      <div class="flex items-center gap-3">
+        <img src="https://via.placeholder.com/60" class="w-14 h-14 rounded-full border-2 border-white" alt="Lana">
+        <div>
+          <h1 class="text-xl font-bold">Lana's Salon</h1>
+          <p class="text-sm opacity-90">Plano, TX • AI Assistant</p>
+        </div>
       </div>
     </div>
 
     <!-- Chat Area -->
     <div id="chat" class="h-[520px] overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
 
-    <!-- Quick Actions -->
+    <!-- Quick Action Buttons -->
     <div class="p-3 border-t bg-white flex gap-2">
-      <button onclick="quickReply('Hi, I want to book an appointment')" 
-              class="flex-1 bg-pink-100 hover:bg-pink-200 text-pink-700 py-2 px-4 rounded-xl text-sm font-medium">
-        Book Appointment
+      <button onclick="quickAction('book')" 
+              class="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-2xl font-medium">
+        📅 Book Appointment
       </button>
       <button onclick="quickReply('What services do you offer?')" 
-              class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-xl text-sm font-medium">
+              class="flex-1 bg-gray-100 hover:bg-gray-200 py-3 rounded-2xl font-medium">
         Services
       </button>
     </div>
 
-    <!-- Input Area -->
+    <!-- Input -->
     <div class="p-4 border-t bg-white">
       <div class="flex gap-2">
         <input type="text" id="userInput" 
-               class="flex-1 border border-gray-300 rounded-2xl px-5 py-3 focus:outline-none focus:border-pink-500"
+               class="flex-1 border rounded-3xl px-5 py-3 focus:outline-none focus:border-pink-500"
                placeholder="Type your message..." 
                onkeypress="if(event.key === 'Enter') sendMessage()">
         <button onclick="sendMessage()" 
-                class="bg-pink-600 hover:bg-pink-700 text-white w-12 h-12 rounded-2xl flex items-center justify-center">
+                class="bg-pink-600 text-white w-12 h-12 rounded-3xl flex items-center justify-center">
           <i class="fas fa-paper-plane"></i>
         </button>
       </div>
@@ -56,17 +53,13 @@
 
   <script>
     const chatDiv = document.getElementById('chat');
-    let conversationHistory = [];
+    let history = [];
 
-    function addMessage(text, isUser) {
-      const msg = document.createElement('div');
-      msg.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
-      msg.innerHTML = `
-        <div class="${isUser ? 'bg-pink-600 text-white' : 'bg-white border'} max-w-[80%] rounded-2xl px-4 py-3">
-          ${text}
-        </div>
-      `;
-      chatDiv.appendChild(msg);
+    function addMessage(text, isUser = false) {
+      const div = document.createElement('div');
+      div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+      div.innerHTML = `<div class="${isUser ? 'bg-pink-600 text-white' : 'bg-white border'} max-w-[85%] rounded-3xl px-4 py-3">${text}</div>`;
+      chatDiv.appendChild(div);
       chatDiv.scrollTop = chatDiv.scrollHeight;
     }
 
@@ -76,25 +69,22 @@
       if (!text) return;
 
       addMessage(text, true);
-      input.value = '';
-
-      conversationHistory.push({ role: "user", content: text });
+      input.value = "";
+      history.push({ role: "user", content: text });
 
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: conversationHistory })
+          body: JSON.stringify({ messages: history })
         });
-
         const data = await res.json();
-        
         if (data.reply) {
-          addMessage(data.reply, false);
-          conversationHistory.push({ role: "assistant", content: data.reply });
+          addMessage(data.reply);
+          history.push({ role: "assistant", content: data.reply });
         }
-      } catch (err) {
-        addMessage("Sorry, I'm having trouble connecting. Please try again.", false);
+      } catch (e) {
+        addMessage("Sorry, I'm having trouble connecting.");
       }
     }
 
@@ -103,7 +93,21 @@
       sendMessage();
     }
 
-    // Welcome message
+    async function quickAction(type) {
+      if (type === 'book') {
+        addMessage("Great! Let me check Lana's availability for you 💇‍♀️", false);
+        // Gọi API lấy slot
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: history, action: "get_slots" })
+          });
+          addMessage("Please tell me your preferred service and date/time, I'll help book it!", false);
+        } catch(e) {}
+      }
+    }
+
     window.onload = () => {
       addMessage(`Hi! I'm Lana's AI assistant 💇‍♀️<br>How can I help you today?`, false);
     };
