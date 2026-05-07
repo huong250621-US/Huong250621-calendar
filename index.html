@@ -1,657 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#8b4a42">
-<meta property="og:title" content="Lana's Salon — Chat & Book">
-<meta property="og:description" content="Chat, ask about hair services, and book your appointment online!">
-<title>Lana's Salon — Chat & Book</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: linear-gradient(145deg, #fdf0ee, #fce8e4, #f9ddd8);
-  min-height: 100vh; min-height: 100dvh;
-  display: flex; align-items: center; justify-content: center;
-}
-
-#app {
-  width: 100%; max-width: 430px;
-  height: 100vh; height: 100dvh;
-  background: #fffaf9; display: flex; flex-direction: column;
-  box-shadow: 0 20px 60px rgba(180,80,70,.15);
-  position: relative; overflow: hidden;
-}
-
-/* ── Header ── */
-#header {
-  background: linear-gradient(135deg, #8b4a42, #c9847a 60%, #e8a598);
-  padding: 16px 16px 12px; flex-shrink: 0;
-  position: relative; overflow: hidden;
-}
-#header::before {
-  content:''; position:absolute; top:-30px; right:-30px;
-  width:100px; height:100px; border-radius:50%; background:rgba(255,255,255,.08);
-}
-.hrow { display:flex; align-items:center; gap:12px; position:relative; z-index:1; }
-#avatar {
-  width:50px; height:50px; border-radius:50%; flex-shrink:0;
-  border:2.5px solid rgba(255,255,255,.55); overflow:hidden;
-  box-shadow:0 2px 12px rgba(0,0,0,.2);
-  background:linear-gradient(135deg,#c9847a,#e8a598);
-  display:flex; align-items:center; justify-content:center; font-size:22px;
-}
-#avatar img { width:100%; height:100%; object-fit:cover; display:block; }
-.sname { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:#fff; line-height:1.15; }
-.stag { font-size:11px; color:rgba(255,255,255,.75); font-style:italic; margin-top:1px; }
-.sonline { font-size:11px; color:rgba(255,255,255,.9); margin-top:3px; display:flex; align-items:center; gap:5px; }
-.dot { width:6px; height:6px; border-radius:50%; background:#a8edbc; animation:pulse 2s ease-in-out infinite; }
-@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
-.ibar {
-  margin-top:10px; background:rgba(255,255,255,.12); border-radius:9px;
-  padding:7px 12px; font-size:11px; color:rgba(255,255,255,.9);
-  display:flex; gap:10px; flex-wrap:wrap; position:relative; z-index:1;
-}
-.ibar a { color:rgba(255,255,255,.9); text-decoration:none; }
-
-/* ── Chat ── */
-#messages { flex:1; overflow-y:auto; padding:16px 14px 8px; scroll-behavior:smooth; }
-#messages::-webkit-scrollbar { width:3px; }
-#messages::-webkit-scrollbar-thumb { background:#f0c8c0; border-radius:99px; }
-.mw { display:flex; margin-bottom:10px; animation:fadeUp .3s ease; }
-.mw.user { justify-content:flex-end; }
-@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
-.mav {
-  width:28px; height:28px; border-radius:50%; flex-shrink:0; margin-right:7px; margin-top:2px;
-  overflow:hidden; border:1.5px solid #e8c4bf;
-  background:linear-gradient(135deg,#c9847a,#e8c4bf);
-  display:flex; align-items:center; justify-content:center; font-size:13px;
-}
-.mav img { width:100%; height:100%; object-fit:cover; }
-.bub {
-  max-width:78%; padding:10px 13px; font-size:14px; line-height:1.6;
-  border-radius:4px 16px 16px 16px; background:#fff; color:#4a2e2a;
-  box-shadow:0 2px 10px rgba(0,0,0,.07); border:1px solid rgba(220,150,140,.15);
-}
-.bub.user {
-  background:linear-gradient(135deg,#c9847a,#8b4a42); color:#fff;
-  border-radius:16px 4px 16px 16px; border:none;
-  box-shadow:0 3px 12px rgba(139,74,66,.3);
-}
-#typing { display:none; align-items:center; gap:7px; margin-bottom:10px; }
-.tdots {
-  background:#fff; border-radius:4px 16px 16px 16px; padding:10px 14px;
-  box-shadow:0 2px 10px rgba(0,0,0,.07); border:1px solid rgba(220,150,140,.15);
-  display:flex; gap:5px; align-items:center;
-}
-.tdots span {
-  width:7px; height:7px; border-radius:50%;
-  background:linear-gradient(135deg,#c9847a,#e8a598);
-  animation:bounce 1.2s ease-in-out infinite;
-}
-.tdots span:nth-child(2){animation-delay:.2s}.tdots span:nth-child(3){animation-delay:.4s}
-@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
-
-/* ── Quick replies ── */
-#qr {
-  padding:6px 12px 8px; display:flex; gap:6px;
-  overflow-x:auto; flex-shrink:0; scrollbar-width:none;
-}
-#qr::-webkit-scrollbar{display:none}
-.qb {
-  white-space:nowrap; padding:6px 13px; border:1.5px solid #f0c8c0;
-  border-radius:99px; background:#fff; color:#c9847a; font-size:12px;
-  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; flex-shrink:0;
-}
-.qb:hover{background:#fef0ee;border-color:#c9847a}
-.qb:disabled{opacity:.5;cursor:default}
-.qb.book-btn{background:#8b4a42;color:#fff;border-color:#8b4a42}
-.qb.book-btn:hover{background:#7a3d36}
-
-/* ── Input ── */
-#iarea { padding:0 12px 16px; display:flex; gap:8px; flex-shrink:0; }
-@supports(padding-bottom:env(safe-area-inset-bottom)){
-  #iarea{padding-bottom:max(16px,env(safe-area-inset-bottom))}
-}
-#txt {
-  flex:1; padding:11px 14px; border:1.5px solid #f0c8c0;
-  border-radius:99px; font-size:14px; font-family:'DM Sans',sans-serif;
-  outline:none; background:#fff; color:#4a2e2a; transition:border-color .2s;
-}
-#txt:focus{border-color:#c9847a}
-#txt::placeholder{color:#d4a09a}
-#sbtn {
-  width:44px; height:44px; border-radius:50%; border:none;
-  background:linear-gradient(135deg,#c9847a,#8b4a42); color:#fff;
-  cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-  transition:all .2s; box-shadow:0 4px 14px rgba(139,74,66,.35);
-}
-#sbtn:disabled{background:#f5ddd9;color:#d4a09a;box-shadow:none;cursor:default}
-#footer{text-align:center;font-size:10px;color:rgba(139,74,66,.3);padding:0 0 4px;flex-shrink:0}
-
-/* ── Booking Panel (slide up) ── */
-#booking-panel {
-  position:absolute; inset:0; background:#fffaf9; z-index:10;
-  display:flex; flex-direction:column;
-  transform:translateY(100%); transition:transform .35s cubic-bezier(.4,0,.2,1);
-}
-#booking-panel.open{transform:translateY(0)}
-
-#bp-header {
-  background:linear-gradient(135deg,#8b4a42,#c9847a); padding:16px 16px 14px;
-  display:flex; align-items:center; gap:12px; flex-shrink:0;
-}
-#bp-back {
-  background:rgba(255,255,255,.2); border:none; border-radius:50%;
-  width:34px; height:34px; cursor:pointer; color:#fff;
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  font-size:18px;
-}
-.bp-title { font-family:'Cormorant Garamond',serif; font-size:20px; color:#fff; font-weight:600; }
-.bp-sub { font-size:11px; color:rgba(255,255,255,.75); margin-top:1px; }
-
-#bp-body { flex:1; overflow-y:auto; padding:16px; }
-#bp-body::-webkit-scrollbar{width:3px}
-#bp-body::-webkit-scrollbar-thumb{background:#f0c8c0;border-radius:99px}
-
-/* Steps */
-.step { display:none; animation:fadeUp .3s ease; }
-.step.active { display:block; }
-
-.step-label {
-  font-size:11px; font-weight:700; letter-spacing:.08em;
-  color:#c9847a; text-transform:uppercase; margin-bottom:10px;
-}
-
-/* Service select */
-.svc-grid { display:flex; flex-direction:column; gap:8px; }
-.svc-item {
-  padding:12px 14px; border:1.5px solid #f0d5d0; border-radius:12px;
-  cursor:pointer; transition:all .15s; background:#fff;
-}
-.svc-item:hover,.svc-item.sel{border-color:#c9847a;background:rgba(201,132,122,.06)}
-.svc-name { font-size:14px; font-weight:600; color:#4a2e2a; }
-.svc-meta { font-size:12px; color:#a0706a; margin-top:2px; }
-
-/* Date select */
-.date-grid { display:flex; gap:8px; flex-wrap:wrap; }
-.date-item {
-  padding:10px 14px; border:1.5px solid #f0d5d0; border-radius:10px;
-  cursor:pointer; transition:all .15s; background:#fff; text-align:center;
-}
-.date-item:hover,.date-item.sel{border-color:#c9847a;background:rgba(201,132,122,.06)}
-.date-wd { font-size:11px; font-weight:700; color:#c9847a; }
-.date-day { font-size:16px; font-weight:700; color:#4a2e2a; }
-
-/* Time select */
-.time-grid { display:flex; gap:8px; flex-wrap:wrap; }
-.time-item {
-  padding:9px 16px; border:1.5px solid #f0d5d0; border-radius:99px;
-  cursor:pointer; transition:all .15s; background:#fff;
-  font-size:13px; color:#4a2e2a; white-space:nowrap;
-}
-.time-item:hover,.time-item.sel{border-color:#c9847a;background:rgba(201,132,122,.06);color:#8b4a42;font-weight:600}
-
-/* Form */
-.field { margin-bottom:14px; }
-.field label { font-size:11px; font-weight:700; letter-spacing:.04em; color:#a0706a; text-transform:uppercase; display:block; margin-bottom:5px; }
-.field input {
-  width:100%; padding:11px 14px; border:1.5px solid #f0d5d0; border-radius:10px;
-  font-size:14px; font-family:'DM Sans',sans-serif; outline:none;
-  background:#fff; color:#4a2e2a; transition:border-color .2s;
-}
-.field input:focus{border-color:#c9847a}
-
-/* Summary card */
-#summary-card {
-  background:rgba(201,132,122,.06); border:1.5px solid rgba(201,132,122,.3);
-  border-radius:12px; padding:14px 16px; margin-bottom:16px;
-}
-#summary-card .row { display:flex; justify-content:space-between; margin-bottom:6px; }
-#summary-card .row:last-child{margin-bottom:0}
-#summary-card .lbl{font-size:12px;color:#a0706a}
-#summary-card .val{font-size:13px;font-weight:600;color:#4a2e2a;text-align:right}
-
-/* Buttons */
-.btn-primary {
-  width:100%; padding:13px; border-radius:12px; border:none;
-  background:linear-gradient(135deg,#c9847a,#8b4a42); color:#fff;
-  font-size:15px; font-weight:700; font-family:'DM Sans',sans-serif;
-  cursor:pointer; transition:opacity .2s; margin-top:8px;
-  box-shadow:0 4px 14px rgba(139,74,66,.3);
-}
-.btn-primary:disabled{opacity:.5;cursor:default}
-.btn-secondary {
-  width:100%; padding:11px; border-radius:12px; margin-top:8px;
-  border:1.5px solid #f0d5d0; background:#fff; color:#a0706a;
-  font-size:14px; font-family:'DM Sans',sans-serif; cursor:pointer;
-}
-
-/* Success screen */
-#success-screen {
-  display:none; text-align:center; padding:30px 20px;
-  animation:fadeUp .4s ease;
-}
-#success-screen.show{display:block}
-.success-icon { font-size:64px; margin-bottom:16px; }
-.success-title { font-family:'Cormorant Garamond',serif; font-size:26px; color:#4a2e2a; font-weight:600; margin-bottom:8px; }
-.success-sub { font-size:14px; color:#a0706a; line-height:1.6; }
-.success-detail { 
-  margin:20px 0; background:rgba(201,132,122,.06); border:1.5px solid rgba(201,132,122,.2);
-  border-radius:12px; padding:16px; text-align:left;
-}
-.success-detail .row { display:flex; gap:10px; margin-bottom:8px; font-size:13px; }
-.success-detail .row:last-child{margin-bottom:0}
-.success-detail .ico{flex-shrink:0}
-.success-detail .txt{color:#4a2e2a}
-
-/* Loading spinner */
-.spin {
-  width:20px; height:20px; border:2.5px solid rgba(255,255,255,.4);
-  border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite;
-  display:inline-block; vertical-align:middle; margin-right:8px;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.note { font-size:12px; color:#a0706a; margin-top:8px; text-align:center; line-height:1.5; }
-.error-msg { color:#c0392b; font-size:13px; text-align:center; margin-top:8px; display:none; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lana's Salon - Chat & Book</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; }
+    .chat-container { max-width: 420px; margin: 20px auto; }
+  </style>
 </head>
-<body>
-<div id="app">
+<body class="bg-gray-100 min-h-screen">
 
-  <!-- ── CHAT UI ── -->
-  <div id="header">
-    <div class="hrow">
-      <div id="avatar">
-        <img src="https://graph.facebook.com/phonglan.phung/picture?type=large" alt="Lana" onerror="this.style.display='none'">
-        💇‍♀️
-      </div>
-      <div style="flex:1">
-        <div class="sname">Lana's Salon</div>
-        <div class="stag">Life is more beautiful with the right hairstylist ✨</div>
-        <div class="sonline"><span class="dot"></span> Online 24/7 · Chat & Book</div>
-      </div>
-    </div>
-    <div class="ibar">
-      <span>🕐 Tue–Sun 9am–7pm</span>
-      <span>📍 Plano, TX 75075</span>
-      <a href="tel:4326645845">📞 (432) 664-5845</a>
-      <a href="https://instagram.com/lanasalonplano" target="_blank">📸 @lanasalonplano</a>
-    </div>
-  </div>
-
-  <div id="messages">
-    <div class="mw">
-      <div class="mav">
-        <img src="https://graph.facebook.com/phonglan.phung/picture?type=normal" alt="Lana" onerror="this.style.display='none'">✨
-      </div>
-      <div class="bub">
-        ✨ Hi! Welcome to <strong>Lana's Salon</strong>!<br><br>
-        I'm Lana's virtual assistant. Ask me about balayage, gray blending, highlights, pricing — or tap <strong>📅 Book Now</strong> to schedule your appointment! 💇‍♀️
-      </div>
-    </div>
-  </div>
-
-  <div id="typing">
-    <div class="mav" style="margin-right:7px;flex-shrink:0">✨</div>
-    <div class="tdots"><span></span><span></span><span></span></div>
-  </div>
-
-  <div id="qr">
-    <button class="qb book-btn" onclick="openBooking()">📅 Book Now</button>
-    <button class="qb" onclick="send(this.textContent)">💰 Pricing</button>
-    <button class="qb" onclick="send(this.textContent)">✨ Balayage without bleach?</button>
-    <button class="qb" onclick="send(this.textContent)">🩶 Blend my gray hair</button>
-    <button class="qb" onclick="send(this.textContent)">🕐 Hours & location</button>
-    <button class="qb" onclick="send(this.textContent)">✂️ What cut suits me?</button>
-  </div>
-
-  <div id="iarea">
-    <input id="txt" type="text" placeholder="Ask me anything about your hair..." onkeydown="if(event.key==='Enter')sendInput()">
-    <button id="sbtn" onclick="sendInput()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="22" y1="2" x2="11" y2="13"/>
-        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-      </svg>
-    </button>
-  </div>
-  <div id="footer">Powered by AI · Lana's Salon Plano TX</div>
-
-  <!-- ── BOOKING PANEL ── -->
-  <div id="booking-panel">
-    <div id="bp-header">
-      <button id="bp-back" onclick="closeBooking()">←</button>
+  <div class="chat-container bg-white shadow-2xl rounded-2xl overflow-hidden border border-gray-200">
+    
+    <!-- Header -->
+    <div class="bg-pink-600 text-white p-4 flex items-center gap-3">
+      <img src="https://via.placeholder.com/60" id="avatar" alt="Lana" class="w-12 h-12 rounded-full object-cover border-2 border-white">
       <div>
-        <div class="bp-title">Book Appointment</div>
-        <div class="bp-sub">Real-time availability · Instant confirmation</div>
+        <h1 class="font-semibold text-lg">Lana's Salon</h1>
+        <p class="text-sm opacity-90">Plano, TX • Online Assistant</p>
       </div>
     </div>
 
-    <div id="bp-body">
+    <!-- Chat Area -->
+    <div id="chat" class="h-[520px] overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
 
-      <!-- Success Screen -->
-      <div id="success-screen">
-        <div class="success-icon">🎉</div>
-        <div class="success-title">You're booked!</div>
-        <div class="success-sub">Lana will also receive a calendar notification.<br>See you soon! 💇‍♀️</div>
-        <div class="success-detail" id="success-detail"></div>
-        <button class="btn-primary" onclick="closeBooking()" style="margin-top:4px">← Back to Chat</button>
-        <p class="note">Questions? Text Lana at (432) 664-5845</p>
+    <!-- Quick Actions -->
+    <div class="p-3 border-t bg-white flex gap-2">
+      <button onclick="quickReply('Hi, I want to book an appointment')" 
+              class="flex-1 bg-pink-100 hover:bg-pink-200 text-pink-700 py-2 px-4 rounded-xl text-sm font-medium">
+        Book Appointment
+      </button>
+      <button onclick="quickReply('What services do you offer?')" 
+              class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-xl text-sm font-medium">
+        Services
+      </button>
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-4 border-t bg-white">
+      <div class="flex gap-2">
+        <input type="text" id="userInput" 
+               class="flex-1 border border-gray-300 rounded-2xl px-5 py-3 focus:outline-none focus:border-pink-500"
+               placeholder="Type your message..." 
+               onkeypress="if(event.key === 'Enter') sendMessage()">
+        <button onclick="sendMessage()" 
+                class="bg-pink-600 hover:bg-pink-700 text-white w-12 h-12 rounded-2xl flex items-center justify-center">
+          <i class="fas fa-paper-plane"></i>
+        </button>
       </div>
-
-      <!-- Step 1: Service -->
-      <div class="step active" id="step-service">
-        <div class="step-label">Step 1 of 4 — Choose Service</div>
-        <div class="svc-grid" id="svc-list"></div>
-      </div>
-
-      <!-- Step 2: Date -->
-      <div class="step" id="step-date">
-        <div class="step-label">Step 2 of 4 — Pick a Date</div>
-        <div id="date-loading" style="text-align:center;padding:30px;color:#a0706a">
-          <div class="spin" style="border-color:rgba(201,132,122,.3);border-top-color:#c9847a"></div>
-          Checking Lana's calendar...
-        </div>
-        <div class="date-grid" id="date-list" style="display:none"></div>
-        <div class="error-msg" id="date-error">Couldn't load availability. Please text Lana directly.</div>
-        <button class="btn-secondary" onclick="goStep('service')">← Back</button>
-      </div>
-
-      <!-- Step 3: Time -->
-      <div class="step" id="step-time">
-        <div class="step-label">Step 3 of 4 — Choose Time</div>
-        <div class="time-grid" id="time-list"></div>
-        <button class="btn-secondary" onclick="goStep('date')" style="margin-top:14px">← Back</button>
-      </div>
-
-      <!-- Step 4: Details + Confirm -->
-      <div class="step" id="step-details">
-        <div class="step-label">Step 4 of 4 — Your Details</div>
-        <div id="summary-card">
-          <div class="row"><span class="lbl">Service</span><span class="val" id="sum-svc">—</span></div>
-          <div class="row"><span class="lbl">Date</span><span class="val" id="sum-date">—</span></div>
-          <div class="row"><span class="lbl">Time</span><span class="val" id="sum-time">—</span></div>
-        </div>
-        <div class="field">
-          <label>Your Name</label>
-          <input id="inp-name" type="text" placeholder="Full name">
-        </div>
-        <div class="field">
-          <label>Phone Number</label>
-          <input id="inp-phone" type="tel" placeholder="(555) 000-0000">
-        </div>
-        <div class="error-msg" id="book-error">Please fill in all fields.</div>
-        <button class="btn-primary" id="confirm-btn" onclick="confirmBooking()">✅ Confirm Appointment</button>
-        <button class="btn-secondary" onclick="goStep('time')">← Back</button>
-        <p class="note">Lana will receive an instant calendar notification ✨</p>
-      </div>
-
     </div>
   </div>
-</div>
 
-<script>
-// ── Data ──
-const SERVICES = [
-  { name:"Haircut + Styling",            price:"$40–$65",  time:"~1 hr",     dur:60  },
-  { name:"Balayage / Ombré",             price:"$150–$220",time:"~3.5 hrs",  dur:210 },
-  { name:"Full Highlights",              price:"$140–$200",time:"~3.5 hrs",  dur:210 },
-  { name:"Highlights (Partial)",         price:"$100–$140",time:"~2.5 hrs",  dur:150 },
-  { name:"Single Color / Tint",          price:"$80–$130", time:"~2.5 hrs",  dur:150 },
-  { name:"Color Correction",             price:"$200+",    time:"~5 hrs",    dur:300 },
-  { name:"Gloss / Toner",                price:"$45–$70",  time:"~1 hr",     dur:60  },
-  { name:"Keratin / Straightening",      price:"$130–$200",time:"~3.5 hrs",  dur:210 },
-  { name:"Perm",                         price:"$110–$170",time:"~3 hrs",    dur:180 },
-  { name:"Deep Conditioning Treatment",  price:"$45–$75",  time:"~1 hr",     dur:60  },
-  { name:"Blowout",                      price:"$35–$50",  time:"~45 min",   dur:60  },
-  { name:"Bang Trim",                    price:"$10–$15",  time:"~15 min",   dur:30  },
-];
+  <script>
+    const chatDiv = document.getElementById('chat');
+    let conversationHistory = [];
 
-let state = { service:null, date:null, slot:null, availability:[] };
-let chatHistory = [];
-let chatBusy = false;
-
-// ── Chat ──
-function esc(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>')
-    .replace(/\n/g,'<br>');
-}
-
-function addMsg(role, text) {
-  const msgs = document.getElementById('messages');
-  const wrap = document.createElement('div');
-  wrap.className = 'mw' + (role==='user' ? ' user' : '');
-  if (role==='assistant') {
-    const av = document.createElement('div');
-    av.className = 'mav';
-    av.innerHTML = '<img src="https://graph.facebook.com/phonglan.phung/picture?type=normal" onerror="this.style.display=\'none\'">✨';
-    wrap.appendChild(av);
-  }
-  const b = document.createElement('div');
-  b.className = 'bub' + (role==='user' ? ' user' : '');
-  b.innerHTML = esc(text);
-  wrap.appendChild(b);
-  msgs.appendChild(wrap);
-  msgs.scrollTop = 99999;
-}
-
-function setChatBusy(on) {
-  chatBusy = on;
-  document.getElementById('typing').style.display = on ? 'flex' : 'none';
-  document.getElementById('txt').disabled = on;
-  document.getElementById('sbtn').disabled = on;
-  document.querySelectorAll('.qb').forEach(b => b.disabled = on);
-  if (on) document.getElementById('messages').scrollTop = 99999;
-}
-
-async function send(text) {
-  if (!text || chatBusy) return;
-  document.getElementById('txt').value = '';
-  addMsg('user', text);
-  chatHistory.push({ role:'user', content:text });
-  setChatBusy(true);
-
-  try {
-    const res = await fetch('/api/chat', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ messages:chatHistory }),
-    });
-    const data = await res.json();
-    const reply = data.reply || "Sorry, something went wrong. Please try again!";
-    chatHistory.push({ role:'assistant', content:reply });
-    addMsg('assistant', reply);
-
-    // Auto-trigger booking panel if AI says the magic phrase
-    if (reply.toLowerCase().includes("pull up lana's available times")) {
-      setTimeout(() => openBooking(), 800);
-    }
-  } catch {
-    addMsg('assistant', '⚠️ Connection error. Please try again!');
-  } finally {
-    setChatBusy(false);
-    document.getElementById('txt').focus();
-  }
-}
-
-function sendInput() {
-  const v = document.getElementById('txt').value.trim();
-  if (v) send(v);
-}
-
-// ── Booking Panel ──
-function openBooking() {
-  renderServices();
-  goStep('service');
-  document.getElementById('success-screen').classList.remove('show');
-  document.getElementById('booking-panel').classList.add('open');
-}
-
-function closeBooking() {
-  document.getElementById('booking-panel').classList.remove('open');
-  state = { service:null, date:null, slot:null, availability:[] };
-}
-
-function goStep(name) {
-  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-  document.getElementById('step-' + name).classList.add('active');
-  document.getElementById('bp-body').scrollTop = 0;
-}
-
-// Step 1 — Services
-function renderServices() {
-  const list = document.getElementById('svc-list');
-  list.innerHTML = SERVICES.map(s => `
-    <div class="svc-item" onclick="selectService(this,'${s.name}')">
-      <div class="svc-name">${s.name}</div>
-      <div class="svc-meta">${s.price} · ${s.time}</div>
-    </div>`).join('');
-}
-
-function selectService(el, name) {
-  document.querySelectorAll('.svc-item').forEach(i => i.classList.remove('sel'));
-  el.classList.add('sel');
-  state.service = name;
-  setTimeout(() => loadDates(), 250);
-}
-
-// Step 2 — Dates
-async function loadDates() {
-  goStep('date');
-  const loading = document.getElementById('date-loading');
-  const list = document.getElementById('date-list');
-  const err = document.getElementById('date-error');
-  loading.style.display = 'block';
-  list.style.display = 'none';
-  err.style.display = 'none';
-
-  try {
-    const res = await fetch('/api/slots');
-    const data = await res.json();
-    state.availability = data.availability || [];
-
-    loading.style.display = 'none';
-
-    if (state.availability.length === 0) {
-      err.textContent = 'No available slots in the next 10 days. Please text Lana at (432) 664-5845.';
-      err.style.display = 'block';
-      return;
+    function addMessage(text, isUser) {
+      const msg = document.createElement('div');
+      msg.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+      msg.innerHTML = `
+        <div class="${isUser ? 'bg-pink-600 text-white' : 'bg-white border'} max-w-[80%] rounded-2xl px-4 py-3">
+          ${text}
+        </div>
+      `;
+      chatDiv.appendChild(msg);
+      chatDiv.scrollTop = chatDiv.scrollHeight;
     }
 
-    list.innerHTML = state.availability.map((day, i) => {
-      const parts = day.dateLabel.split(' ');
-      return `<div class="date-item" onclick="selectDate(this,${i})">
-        <div class="date-wd">${parts[0].replace(',','')}</div>
-        <div class="date-day">${parts[2]}</div>
-        <div style="font-size:11px;color:#a0706a">${parts[1]}</div>
-      </div>`;
-    }).join('');
-    list.style.display = 'flex';
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (!text) return;
 
-  } catch {
-    loading.style.display = 'none';
-    err.textContent = "Couldn't load availability. Please text Lana at (432) 664-5845.";
-    err.style.display = 'block';
-  }
-}
+      addMessage(text, true);
+      input.value = '';
 
-function selectDate(el, idx) {
-  document.querySelectorAll('.date-item').forEach(i => i.classList.remove('sel'));
-  el.classList.add('sel');
-  state.date = state.availability[idx];
-  setTimeout(() => renderTimes(), 200);
-}
+      conversationHistory.push({ role: "user", content: text });
 
-// Step 3 — Times
-function renderTimes() {
-  const list = document.getElementById('time-list');
-  list.innerHTML = state.date.slots.map(slot =>
-    `<div class="time-item" onclick="selectTime(this,'${slot.start}','${slot.end}','${slot.label}')">${slot.label}</div>`
-  ).join('');
-  goStep('time');
-}
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: conversationHistory })
+        });
 
-function selectTime(el, start, end, label) {
-  document.querySelectorAll('.time-item').forEach(i => i.classList.remove('sel'));
-  el.classList.add('sel');
-  state.slot = { start, end, label };
-  setTimeout(() => showDetails(), 200);
-}
-
-// Step 4 — Details
-function showDetails() {
-  document.getElementById('sum-svc').textContent = state.service;
-  document.getElementById('sum-date').textContent = state.date.dateLabel;
-  document.getElementById('sum-time').textContent = state.slot.label;
-  document.getElementById('inp-name').value = '';
-  document.getElementById('inp-phone').value = '';
-  document.getElementById('book-error').style.display = 'none';
-  goStep('details');
-}
-
-// Confirm booking
-async function confirmBooking() {
-  const name  = document.getElementById('inp-name').value.trim();
-  const phone = document.getElementById('inp-phone').value.trim();
-  const err   = document.getElementById('book-error');
-  const btn   = document.getElementById('confirm-btn');
-
-  if (!name || !phone) {
-    err.textContent = 'Please fill in your name and phone number.';
-    err.style.display = 'block';
-    return;
-  }
-
-  err.style.display = 'none';
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Booking...';
-
-  try {
-    const res = await fetch('/api/book', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        name, phone,
-        service: state.service,
-        startTime: state.slot.start,
-        endTime: state.slot.end,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || 'Booking failed');
+        const data = await res.json();
+        
+        if (data.reply) {
+          addMessage(data.reply, false);
+          conversationHistory.push({ role: "assistant", content: data.reply });
+        }
+      } catch (err) {
+        addMessage("Sorry, I'm having trouble connecting. Please try again.", false);
+      }
     }
 
-    // Show success
-    document.getElementById('success-detail').innerHTML = `
-      <div class="row"><span class="ico">💇‍♀️</span><span class="txt"><strong>${state.service}</strong></span></div>
-      <div class="row"><span class="ico">📅</span><span class="txt">${state.date.dateLabel} at ${state.slot.label}</span></div>
-      <div class="row"><span class="ico">👤</span><span class="txt">${name}</span></div>
-      <div class="row"><span class="ico">📞</span><span class="txt">${phone}</span></div>
-      <div class="row"><span class="ico">📍</span><span class="txt">Plano, TX 75075 (Lana will send address)</span></div>
-    `;
+    function quickReply(text) {
+      document.getElementById('userInput').value = text;
+      sendMessage();
+    }
 
-    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-    document.getElementById('success-screen').classList.add('show');
-
-    // Add confirmation to chat
-    addMsg('assistant', `🎉 Great news, ${name}! Your appointment is confirmed:\n\n💇‍♀️ ${state.service}\n📅 ${state.date.dateLabel} at ${state.slot.label}\n\nLana has been notified and will text you the address at ${phone}. See you soon! ✨`);
-    chatHistory.push({ role:'assistant', content:`Appointment confirmed for ${name}!` });
-
-  } catch (e) {
-    err.textContent = e.message || 'Something went wrong. Please text Lana at (432) 664-5845.';
-    err.style.display = 'block';
-    btn.disabled = false;
-    btn.innerHTML = '✅ Confirm Appointment';
-  }
-}
-</script>
+    // Welcome message
+    window.onload = () => {
+      addMessage(`Hi! I'm Lana's AI assistant 💇‍♀️<br>How can I help you today?`, false);
+    };
+  </script>
 </body>
 </html>
