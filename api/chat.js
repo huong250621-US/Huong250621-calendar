@@ -6,29 +6,19 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
+  // Phiên bản cực đơn giản để test
   try {
-    const { messages, action } = req.body;
-    const lastMessage = messages[messages.length - 1]?.content.toLowerCase() || "";
+    const { messages } = req.body;
+    const userMessage = messages?.[messages.length - 1]?.content?.toLowerCase() || "";
 
-    // ====================== BOOKING LOGIC ======================
-    if (action === "create_booking" || lastMessage.includes("book") || lastMessage.includes("appointment")) {
-      return res.status(200).json({
-        success: true,
-        message: `✅ Booking Confirmed!\n\nService: Balayage\nTime: May 7th, 9:00 AM\n\nThank you! Lana will confirm shortly via text at (432) 664-5845 💕`
-      });
-    }
-
-    // Smart Reply
     let reply = "Hi! I'm Lana's assistant 💇‍♀️ How can I help you today?";
 
-    if (lastMessage.includes("balayage") || lastMessage.includes("highlight") || lastMessage.includes("haircut")) {
-      reply = "Great choice! What date and time would you like for your appointment?";
-    } 
-    else if (lastMessage.includes("9:00") || lastMessage.includes("may 7") || lastMessage.includes("tomorrow")) {
-      reply = "Perfect! Would you like me to book Balayage at 9:00 AM on May 7th?";
-    } 
-    else if (lastMessage.includes("yes") || lastMessage.includes("yeah") || lastMessage.includes("ok")) {
-      reply = "✅ Booking confirmed! Lana will text you to confirm shortly.";
+    if (userMessage.includes("book") || userMessage.includes("appointment")) {
+      reply = "✅ Booking request received!\n\nPlease tell me your preferred service and date/time. Example: Balayage on May 8 at 10am";
+    } else if (userMessage.includes("balayage") || userMessage.includes("highlight")) {
+      reply = "Great choice! Would you like me to book Balayage for you?";
+    } else if (userMessage.includes("yes") || userMessage.includes("ok")) {
+      reply = "✅ Booking confirmed! Lana will text you to confirm shortly at (432) 664-5845 💕";
     }
 
     return res.status(200).json({ reply });
