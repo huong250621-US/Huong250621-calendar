@@ -9,6 +9,7 @@ export default async function handler(req, res) {
   try {
     const { messages, action, date, service, name, phone, startTime } = req.body;
 
+    // ====================== GOOGLE CALENDAR SETUP ======================
     const { google } = await import("googleapis");
     const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
     
@@ -19,10 +20,61 @@ export default async function handler(req, res) {
 
     const calendar = google.calendar({ version: "v3", auth });
     const calendarId = process.env.CALENDAR_ID;
-
     const TIMEZONE = "America/Chicago";
 
-    // ====================== SYSTEM PROMPT ======================
+    // ====================== GET AVAILABLE SLOTS ======================
+    if (action === "get_slots") {
+      const now = new Date();
+      const maxDate = new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000); // 10 days ahead
+
+      const freebusy = await calendar.freebusy.query({
+        requestBody: {
+          timeMin: now.toISOString(),
+          timeMax: maxDate.toISOString(),
+          timeZone: TIMEZONE,
+          items: [{ id: calendarId }],
+        },
+      });
+
+      const busyTimes = freebusy.data.calendars[calendarId]?.busy || [];
+
+      return res.status(200).json({ 
+        busyTimes,
+        message: "Available slots retrieved successfully." 
+      });
+    }
+
+    // ====================== CREATE BOOKING ======================
+    if (action === "create_booking") {
+      if (!name || !phone || !service || !startTime) {
+        return res.status(400).json({ error: "Missing booking information" });
+      }
+
+      const duration = 120; // minutes, bạn có thể thay đổi theo service
+      const start = new Date(startTime);
+      const end = new Date(start.getTime() + duration * 60 * 1000);
+
+      const event = {
+        summary: `💇‍♀️ ${service} — ${name}`,
+        description: `Client: ${name}\nPhone: ${phone}\nService: ${service}\nBooked via chatbot`,
+        start: { dateTime: start.toISOString(), timeZone: TIMEZONE },
+        end: { dateTime: end.toISOString(), timeZone: TIMEZONE },
+        colorId: "11",
+      };
+
+      const result = await calendar.events.insert({
+        calendarId,
+        requestBody: event,
+      });
+
+      return res.status(200).json({ 
+        success: true,
+        message: `✅ Booking confirmed for ${service} on ${start.toLocaleDateString()}`,
+        eventId: result.data.id
+      });
+    }
+
+    // ====================== NORMAL CHATBOT ======================
     const SYSTEM_PROMPT = `You are a warm, knowledgeable hair consultant for Lana's Salon — a private, one-on-one home studio in Plano, TX 75075.
 
 SALON INFO:
@@ -34,45 +86,14 @@ SALON INFO:
 
 SPECIALTY: Balayage WITHOUT Bleach & Gray Hair Blending.
 
-SERVICES & PRICING: (same as before - I kept it short for space)
-- Haircut + Styling: $40–$65
-- Bang Trim: $10–$15
-- Single Color / Tint: $80–$130
-- Balayage / Ombré: $150–$220
-- ... (and other services)
+Always respond in English only.
 
-LANGUAGE RULE: Respond ONLY in English, no matter what language the client uses. No exceptions.
-
-When client wants to book:
-- Help choose service
-- Ask for preferred dates/times
+When the client wants to book:
+- Help them choose service
+- Ask for preferred dates and times
 - Say exactly: "Great! Let me check Lana's availability for you."
-- Then guide them through booking.`;
+- Then offer to book for them.`;
 
-    // ====================== HANDLE ACTIONS ======================
-    if (action === "create_booking") {
-      // Tạo event vào Google Calendar
-      const event = {
-        summary: `💇‍♀️ ${service} — ${name}`,
-        description: `Client: ${name}\nPhone: ${phone}\nService: ${service}\nBooked via chatbot`,
-        start: { dateTime: startTime, timeZone: TIMEZONE },
-        end: { dateTime: new Date(new Date(startTime).getTime() + 7200000).toISOString(), timeZone: TIMEZONE }, // default 2 hours
-        colorId: "11",
-      };
-
-      const result = await calendar.events.insert({
-        calendarId,
-        requestBody: event,
-      });
-
-      return res.status(200).json({ 
-        success: true, 
-        message: "Booking confirmed! Lana will contact you shortly.",
-        eventId: result.data.id 
-      });
-    }
-
-    // ====================== NORMAL CHAT ======================
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
