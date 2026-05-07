@@ -9,68 +9,72 @@ export default async function handler(req, res) {
   try {
     const { messages, action, service, name, phone, startTime } = req.body;
 
-    const { google } = await import("googleapis");
-    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
-    const auth = new google.auth.GoogleAuth({ credentials, scopes: ["https://www.googleapis.com/auth/calendar"] });
-    const calendar = google.calendar({ version: "v3", auth });
-    const calendarId = process.env.CALENDAR_ID;
-    const TIMEZONE = "America/Chicago";
-
-    // ====================== KIỂM TRA LỊCH TRỐNG ======================
+    // ====================== GOOGLE CALENDAR ======================
     if (action === "create_booking" && startTime) {
+      const { google } = await import("googleapis");
+      const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+      const auth = new google.auth.GoogleAuth({ credentials, scopes: ["https://www.googleapis.com/auth/calendar"] });
+      const calendar = google.calendar({ version: "v3", auth });
+      const calendarId = process.env.CALENDAR_ID;
+
       const start = new Date(startTime);
-      const end = new Date(start.getTime() + 90 * 60 * 1000); // 90 phút
+      const end = new Date(start.getTime() + 90 * 60 * 1000);
 
-      // Kiểm tra xem có trùng lịch không
-      const freebusy = await calendar.freebusy.query({
-        requestBody: {
-          timeMin: start.toISOString(),
-          timeMax: end.toISOString(),
-          items: [{ id: calendarId }]
-        }
-      });
-
-      const busy = freebusy.data.calendars[calendarId]?.busy || [];
-
-      if (busy.length > 0) {
-        return res.status(200).json({
-          success: false,
-          message: "❌ Thời gian này đã có lịch. Vui lòng chọn giờ khác."
-        });
-      }
-
-      // Tạo lịch nếu trống
       const event = {
         summary: `💇‍♀️ ${service || "Appointment"} — ${name || "Client"}`,
         description: `Phone: ${phone}\nBooked via chatbot`,
-        start: { dateTime: start.toISOString(), timeZone: TIMEZONE },
-        end: { dateTime: end.toISOString(), timeZone: TIMEZONE },
+        start: { dateTime: start.toISOString(), timeZone: "America/Chicago" },
+        end: { dateTime: end.toISOString(), timeZone: "America/Chicago" },
         colorId: "11",
       };
 
-      const result = await calendar.events.insert({ calendarId, requestBody: event });
+      await calendar.events.insert({ calendarId, requestBody: event });
 
       return res.status(200).json({
         success: true,
-        message: `✅ Booking Confirmed!\nService: ${service}\nTime: ${start.toLocaleString("en-US", {timeZone: TIMEZONE})}\n\nLana sẽ xác nhận qua tin nhắn trong thời gian sớm nhất.`
+        message: `✅ Booking confirmed!\nService: ${service}\nTime: ${start.toLocaleString("en-US", {timeZone: "America/Chicago"})}\n\nLana sẽ liên hệ xác nhận qua tin nhắn.`
       });
     }
 
-    // ====================== CHAT THƯỜNG ======================
-    const lastMsg = messages[messages.length - 1]?.content.toLowerCase() || "";
+    // ====================== CHAT THÔNG MINH ======================
+    const SYSTEM_PROMPT = `You are a warm, knowledgeable hair consultant for Lana's Salon — a private home studio in Plano, TX. 
+You specialize in balayage without bleach and gray hair blending.
+Be friendly, professional, and helpful. Always respond in English.
 
-    let reply = "Hi! I'm Lana's assistant 💇‍♀️ How can I help you today?";
+Salon Info:
+- Phone: (432) 664-5845
+- Hours: Tue–Sun 9am–7pm
+- Location: Plano, TX 75075
 
-    if (lastMsg.includes("book") || lastMsg.includes("appointment")) {
-      reply = "Great! Please tell me which service and your preferred date & time.\nExample: Balayage on May 8 at 10am";
-    }
+When customer wants to book:
+- Ask for service and preferred time
+- Then say: "Great! Let me help you book that."`;
 
-    return res.status(200).json({ reply });
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 800,
+        system: SYSTEM_PROMPT,
+        messages: messages || [],
+      }),
+    });
+
+    const data = await response.json();
+
+    return res.status(200).json({ 
+      reply: data.content?.[0]?.text || "Sorry, I didn't understand. Can you rephrase?" 
+    });
 
   } catch (error) {
     console.error("Error:", error.message);
     return res.status(200).json({ 
-      reply: "Sorry, I'm having trouble right now. Please text Lana at (432) 664-5845 💕" 
+      reply: "Sorry, I'm having trouble connecting right now. Please try again or text Lana at (432) 664-5845 💕" 
     });
   }
 }
