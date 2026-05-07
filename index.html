@@ -24,10 +24,10 @@
     <!-- Chat Area -->
     <div id="chat" class="h-[520px] overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
 
-    <!-- Quick Action Buttons -->
+    <!-- Quick Buttons -->
     <div class="p-3 border-t bg-white flex gap-2">
       <button onclick="quickAction('book')" 
-              class="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-2xl font-medium">
+              class="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-2xl font-medium flex items-center justify-center gap-2">
         📅 Book Appointment
       </button>
       <button onclick="quickReply('What services do you offer?')" 
@@ -88,24 +88,39 @@
       }
     }
 
-    function quickReply(text) {
-      document.getElementById('userInput').value = text;
-      sendMessage();
-    }
-
     async function quickAction(type) {
       if (type === 'book') {
         addMessage("Great! Let me check Lana's availability for you 💇‍♀️", false);
-        // Gọi API lấy slot
+        
+        // Gọi API để tạo booking (demo)
         try {
           const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: history, action: "get_slots" })
+            body: JSON.stringify({ 
+              messages: history,
+              action: "create_booking",
+              service: "Balayage",
+              name: "Client",
+              phone: "(432) 664-5845",
+              startTime: new Date(Date.now() + 86400000).toISOString() // tomorrow
+            })
           });
-          addMessage("Please tell me your preferred service and date/time, I'll help book it!", false);
-        } catch(e) {}
+          const data = await res.json();
+          if (data.success) {
+            addMessage(data.message, false);
+          } else {
+            addMessage("Booking failed. Please try again.", false);
+          }
+        } catch (e) {
+          addMessage("Booking service is temporarily unavailable.", false);
+        }
       }
+    }
+
+    function quickReply(text) {
+      document.getElementById('userInput').value = text;
+      sendMessage();
     }
 
     window.onload = () => {
