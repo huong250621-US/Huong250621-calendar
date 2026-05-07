@@ -7,20 +7,11 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   try {
-    const { messages, action, service, name, phone, startTime } = req.body;
+    const { messages } = req.body;
 
-    // ====================== BOOKING ======================
-    if (action === "create_booking") {
-      return res.status(200).json({
-        success: true,
-        message: `✅ Booking confirmed!\n\nService: ${service || "Appointment"}\nTime: ${new Date(startTime || Date.now()).toLocaleString("en-US", {timeZone: "America/Chicago"})}\n\nLana will confirm shortly via text at (432) 664-5845.`
-      });
-    }
-
-    // ====================== NORMAL CHAT ======================
-    const SYSTEM_PROMPT = `You are a warm, friendly assistant for Lana's Salon in Plano, TX. 
-You help customers with services, pricing, and booking appointments. 
-Always respond in English. Be helpful and concise.`;
+    const SYSTEM_PROMPT = `You are a warm and helpful assistant for Lana's Salon in Plano, TX. 
+You help with hair services, pricing, and booking appointments. 
+Always reply in English, be friendly and professional.`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -31,7 +22,7 @@ Always respond in English. Be helpful and concise.`;
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 800,
+        max_tokens: 700,
         system: SYSTEM_PROMPT,
         messages: messages || [],
       }),
@@ -42,18 +33,18 @@ Always respond in English. Be helpful and concise.`;
     if (!response.ok) {
       console.error("Anthropic Error:", data);
       return res.status(200).json({ 
-        reply: "Sorry, I'm having trouble connecting right now. Please try again or text Lana at (432) 664-5845." 
+        reply: "I'm having trouble connecting to my brain right now. Please try again or text Lana directly at (432) 664-5845 💕" 
       });
     }
 
     return res.status(200).json({ 
-      reply: data.content?.[0]?.text || "Sorry, I didn't understand. Can you rephrase?" 
+      reply: data.content?.[0]?.text || "Sorry, I didn't catch that. Could you say it again?" 
     });
 
   } catch (error) {
     console.error("Server Error:", error.message);
     return res.status(200).json({ 
-      reply: "Sorry, something went wrong. Please try again or text Lana directly at (432) 664-5845." 
+      reply: "Sorry, I'm having trouble connecting right now. Please try again or text Lana at (432) 664-5845." 
     });
   }
 }
