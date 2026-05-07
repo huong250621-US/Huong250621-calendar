@@ -1,0 +1,8 @@
+{
+  "name": "lanas-salon-chatbot",
+  "version": "2.0.0",
+  "description": "AI Chatbot + Google Calendar booking for Lana's Salon",
+  "dependencies": {
+    "googleapis": "^140.0.0"
+  }
+}
