@@ -10,28 +10,22 @@ export default async function handler(req, res) {
     const { messages, action, service, name, phone, startTime } = req.body;
 
     // Booking
-    if (action === "create_booking" && startTime) {
+    if (action === "create_booking" || (messages && messages[messages.length-1].content.toLowerCase().includes("book"))) {
       return res.status(200).json({
         success: true,
-        message: `✅ Booking Confirmed!\n\nService: ${service || "Appointment"}\nTime: ${new Date(startTime).toLocaleString("en-US", {timeZone: "America/Chicago"})}\n\nLana will confirm shortly via text at (432) 664-5845 💕`
+        message: `✅ Booking Confirmed!\n\nService: ${service || "Appointment"}\nTime: ${new Date(startTime || Date.now() + 86400000).toLocaleString("en-US", {timeZone: "America/Chicago"})}\n\nLana will confirm shortly via text at (432) 664-5845 💕`
       });
     }
 
-    // Strong System Prompt
-    const SYSTEM_PROMPT = `You are Lana's warm, professional, and knowledgeable virtual assistant at Lana's Salon in Plano, TX.
-You are helpful, friendly, and concise. Always reply in natural English.
+    // Strong & Clean Prompt
+    const SYSTEM_PROMPT = `You are Lana's friendly and professional virtual assistant at Lana's Salon in Plano, TX.
+You specialize in balayage without bleach and gray blending.
+Be warm, helpful, and natural. Always reply in clear English.
 
-Core services:
-- Balayage without bleach (signature)
-- Gray hair blending
-- Highlights, color, haircut & styling, keratin, etc.
-
-When the customer says they want to book:
-- Show excitement
-- Ask for service + preferred date/time
-- Then offer to book for them.
-
-Tone: Warm, positive, like a good friend who is a hair expert. Use light emojis.`;
+When the customer wants to book an appointment:
+- Be excited
+- Ask for service and preferred time
+- Help them book`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -42,7 +36,7 @@ Tone: Warm, positive, like a good friend who is a hair expert. Use light emojis.
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 1000,
+        max_tokens: 800,
         system: SYSTEM_PROMPT,
         messages: messages || [],
       }),
@@ -51,13 +45,13 @@ Tone: Warm, positive, like a good friend who is a hair expert. Use light emojis.
     const data = await response.json();
 
     return res.status(200).json({ 
-      reply: data.content?.[0]?.text || "Sorry, I didn't understand. Can you rephrase?" 
+      reply: data.content?.[0]?.text || "Sorry, can you rephrase that?" 
     });
 
   } catch (error) {
     console.error("Error:", error.message);
     return res.status(200).json({ 
-      reply: "Sorry, I'm having trouble connecting right now. Please try again or text Lana directly at (432) 664-5845 💕" 
+      reply: "Sorry, I'm having trouble right now. Please text Lana at (432) 664-5845 💕" 
     });
   }
 }
