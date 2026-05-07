@@ -1,131 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lana's Salon - Chat & Book</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-</head>
-<body class="bg-gray-100">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#8b4a42">
+<meta property="og:title" content="Lana's Salon — Chat & Book">
+<meta property="og:description" content="Ask about hair services, pricing, or book an appointment with Lana in Plano TX.">
+<title>Lana's Salon — Chat & Book</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  <div class="max-w-md mx-auto mt-6 bg-white shadow-2xl rounded-3xl overflow-hidden">
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-pink-600 to-rose-500 text-white p-5">
-      <div class="flex items-center gap-3">
-        <img src="https://via.placeholder.com/60" class="w-14 h-14 rounded-full border-2 border-white" alt="Lana">
-        <div>
-          <h1 class="text-xl font-bold">Lana's Salon</h1>
-          <p class="text-sm opacity-90">Plano, TX • AI Assistant</p>
-        </div>
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(145deg, #fdf0ee, #fce8e4, #f9ddd8);
+    min-height: 100vh; min-height: 100dvh;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  #app {
+    width: 100%; max-width: 430px;
+    height: 100vh; height: 100dvh;
+    background: #fffaf9;
+    display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(180,80,70,.15);
+    position: relative; overflow: hidden;
+  }
+
+  /* Header */
+  #header {
+    background: linear-gradient(135deg, #8b4a42, #c9847a 60%, #e8a598);
+    padding: 16px 16px 12px; flex-shrink: 0;
+    position: relative; overflow: hidden;
+  }
+  #header::before {
+    content:''; position:absolute; top:-30px; right:-30px;
+    width:100px; height:100px; border-radius:50%;
+    background:rgba(255,255,255,.08);
+  }
+  .header-row { display:flex; align-items:center; gap:12px; position:relative; z-index:1; }
+
+  #avatar {
+    width:50px; height:50px; border-radius:50%; flex-shrink:0;
+    border:2.5px solid rgba(255,255,255,.55);
+    overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.2);
+    background:linear-gradient(135deg,#c9847a,#e8a598);
+    display:flex; align-items:center; justify-content:center; font-size:22px;
+  }
+  #avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+
+  .salon-name { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:#fff; line-height:1.15; }
+  .tagline { font-size:11px; color:rgba(255,255,255,.75); font-style:italic; margin-top:1px; }
+  .online { font-size:11px; color:rgba(255,255,255,.9); margin-top:3px; display:flex; align-items:center; gap:5px; }
+  .dot { width:6px; height:6px; border-radius:50%; background:#a8edbc; animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+  .info-bar {
+    margin-top:10px; background:rgba(255,255,255,.12);
+    border-radius:9px; padding:7px 12px;
+    font-size:11px; color:rgba(255,255,255,.9);
+    display:flex; gap:10px; flex-wrap:wrap; position:relative; z-index:1;
+  }
+  .info-bar a { color:rgba(255,255,255,.9); text-decoration:none; }
+  .info-bar a:hover { text-decoration:underline; }
+
+  /* Messages */
+  #messages { flex:1; overflow-y:auto; padding:16px 14px 8px; scroll-behavior:smooth; }
+  #messages::-webkit-scrollbar { width:3px; }
+  #messages::-webkit-scrollbar-thumb { background:#f0c8c0; border-radius:99px; }
+
+  .msg-wrap { display:flex; margin-bottom:10px; animation:fadeUp .3s ease; }
+  .msg-wrap.user { justify-content:flex-end; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
+
+  .msg-av {
+    width:28px; height:28px; border-radius:50%;
+    flex-shrink:0; margin-right:7px; margin-top:2px;
+    overflow:hidden; border:1.5px solid #e8c4bf;
+    background:linear-gradient(135deg,#c9847a,#e8c4bf);
+    display:flex; align-items:center; justify-content:center; font-size:13px;
+  }
+  .msg-av img { width:100%; height:100%; object-fit:cover; }
+
+  .bubble {
+    max-width:78%; padding:10px 13px;
+    font-size:14px; line-height:1.6;
+    border-radius:4px 16px 16px 16px;
+    background:#fff; color:#4a2e2a;
+    box-shadow:0 2px 10px rgba(0,0,0,.07);
+    border:1px solid rgba(220,150,140,.15);
+  }
+  .bubble.user {
+    background:linear-gradient(135deg,#c9847a,#8b4a42); color:#fff;
+    border-radius:16px 4px 16px 16px; border:none;
+    box-shadow:0 3px 12px rgba(139,74,66,.3);
+  }
+
+  /* Typing */
+  #typing { display:none; align-items:center; gap:7px; margin-bottom:10px; }
+  .typing-dots {
+    background:#fff; border-radius:4px 16px 16px 16px;
+    padding:10px 14px; box-shadow:0 2px 10px rgba(0,0,0,.07);
+    border:1px solid rgba(220,150,140,.15);
+    display:flex; gap:5px; align-items:center;
+  }
+  .typing-dots span {
+    width:7px; height:7px; border-radius:50%;
+    background:linear-gradient(135deg,#c9847a,#e8a598);
+    animation:bounce 1.2s ease-in-out infinite;
+  }
+  .typing-dots span:nth-child(2){animation-delay:.2s}
+  .typing-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+
+  /* Quick replies */
+  #quick-replies {
+    padding:6px 12px 8px; display:flex; gap:6px;
+    overflow-x:auto; flex-shrink:0; scrollbar-width:none;
+  }
+  #quick-replies::-webkit-scrollbar{display:none}
+  .qr {
+    white-space:nowrap; padding:6px 13px;
+    border:1.5px solid #f0c8c0; border-radius:99px;
+    background:#fff; color:#c9847a; font-size:12px;
+    cursor:pointer; font-family:'DM Sans',sans-serif;
+    transition:all .15s; flex-shrink:0;
+  }
+  .qr:hover { background:#fef0ee; border-color:#c9847a; }
+  .qr:disabled { opacity:.5; cursor:default; }
+
+  /* Input */
+  #input-area {
+    padding:0 12px 16px; display:flex; gap:8px; flex-shrink:0;
+  }
+  @supports (padding-bottom: env(safe-area-inset-bottom)){
+    #input-area { padding-bottom:max(16px,env(safe-area-inset-bottom)); }
+  }
+
+  #txt {
+    flex:1; padding:11px 14px;
+    border:1.5px solid #f0c8c0; border-radius:99px;
+    font-size:14px; font-family:'DM Sans',sans-serif;
+    outline:none; background:#fff; color:#4a2e2a;
+    transition:border-color .2s;
+  }
+  #txt:focus { border-color:#c9847a; }
+  #txt::placeholder { color:#d4a09a; }
+
+  #send {
+    width:44px; height:44px; border-radius:50%; border:none;
+    background:linear-gradient(135deg,#c9847a,#8b4a42); color:#fff;
+    cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    transition:all .2s; box-shadow:0 4px 14px rgba(139,74,66,.35);
+  }
+  #send:disabled { background:#f5ddd9; color:#d4a09a; box-shadow:none; cursor:default; }
+
+  #footer { text-align:center; font-size:10px; color:rgba(139,74,66,.3); padding:0 0 4px; flex-shrink:0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="header">
+    <div class="header-row">
+      <div id="avatar">
+        <img src="https://graph.facebook.com/phonglan.phung/picture?type=large"
+             alt="Lana" onerror="this.style.display='none'">
+        💇‍♀️
+      </div>
+      <div style="flex:1">
+        <div class="salon-name">Lana's Salon</div>
+        <div class="tagline">Life is more beautiful with the right hairstylist ✨</div>
+        <div class="online"><span class="dot"></span> Online 24/7 · Virtual Consultant</div>
       </div>
     </div>
-
-    <!-- Chat Area -->
-    <div id="chat" class="h-[520px] overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
-
-    <!-- Quick Buttons -->
-    <div class="p-3 border-t bg-white flex gap-2">
-      <button onclick="quickAction('book')" 
-              class="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-2xl font-medium flex items-center justify-center gap-2">
-        📅 Book Appointment
-      </button>
-      <button onclick="quickReply('What services do you offer?')" 
-              class="flex-1 bg-gray-100 hover:bg-gray-200 py-3 rounded-2xl font-medium">
-        Services
-      </button>
+    <div class="info-bar">
+      <span>🕐 Tue–Sun 9am–7pm</span>
+      <span>📍 Plano, TX 75075</span>
+      <a href="tel:4326645845">📞 (432) 664-5845</a>
+      <a href="https://instagram.com/lanasalonplano" target="_blank">📸 @lanasalonplano</a>
     </div>
+  </div>
 
-    <!-- Input -->
-    <div class="p-4 border-t bg-white">
-      <div class="flex gap-2">
-        <input type="text" id="userInput" 
-               class="flex-1 border rounded-3xl px-5 py-3 focus:outline-none focus:border-pink-500"
-               placeholder="Type your message..." 
-               onkeypress="if(event.key === 'Enter') sendMessage()">
-        <button onclick="sendMessage()" 
-                class="bg-pink-600 text-white w-12 h-12 rounded-3xl flex items-center justify-center">
-          <i class="fas fa-paper-plane"></i>
-        </button>
+  <div id="messages">
+    <div class="msg-wrap">
+      <div class="msg-av">
+        <img src="https://graph.facebook.com/phonglan.phung/picture?type=normal"
+             alt="Lana" onerror="this.style.display='none'">✨
+      </div>
+      <div class="bubble">
+        ✨ Hi! Welcome to <strong>Lana's Salon</strong>!<br><br>
+        I'm Lana's virtual assistant. Ask me about balayage, gray blending, highlights, pricing, or book an appointment! 💇‍♀️<br><br>
+        What can I help you with today?
       </div>
     </div>
   </div>
 
-  <script>
-    const chatDiv = document.getElementById('chat');
-    let history = [];
+  <div id="typing">
+    <div class="msg-av" style="margin-right:7px;flex-shrink:0">✨</div>
+    <div class="typing-dots"><span></span><span></span><span></span></div>
+  </div>
 
-    function addMessage(text, isUser = false) {
-      const div = document.createElement('div');
-      div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
-      div.innerHTML = `<div class="${isUser ? 'bg-pink-600 text-white' : 'bg-white border'} max-w-[85%] rounded-3xl px-4 py-3">${text}</div>`;
-      chatDiv.appendChild(div);
-      chatDiv.scrollTop = chatDiv.scrollHeight;
+  <div id="quick-replies">
+    <button class="qr" onclick="send(this.textContent)">💰 Pricing</button>
+    <button class="qr" onclick="send(this.textContent)">✨ Balayage without bleach?</button>
+    <button class="qr" onclick="send(this.textContent)">🩶 Blend my gray hair</button>
+    <button class="qr" onclick="send(this.textContent)">📅 Book appointment</button>
+    <button class="qr" onclick="send(this.textContent)">🕐 Hours & location</button>
+    <button class="qr" onclick="send(this.textContent)">✂️ What cut suits me?</button>
+  </div>
+
+  <div id="input-area">
+    <input id="txt" type="text" placeholder="Ask me anything about your hair..."
+           onkeydown="if(event.key==='Enter')sendInput()">
+    <button id="send" onclick="sendInput()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="footer">Powered by AI · Lana's Salon Plano TX</div>
+</div>
+
+<script>
+  let history = [];
+  let busy = false;
+
+  function esc(t) {
+    return t
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g,'<em>$1</em>')
+      .replace(/\n/g,'<br>');
+  }
+
+  function addMsg(role, text) {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-wrap' + (role==='user' ? ' user' : '');
+
+    if (role === 'assistant') {
+      const av = document.createElement('div');
+      av.className = 'msg-av';
+      av.innerHTML = '<img src="https://graph.facebook.com/phonglan.phung/picture?type=normal" onerror="this.style.display=\'none\'">✨';
+      wrap.appendChild(av);
     }
 
-    async function sendMessage() {
-      const input = document.getElementById('userInput');
-      const text = input.value.trim();
-      if (!text) return;
+    const b = document.createElement('div');
+    b.className = 'bubble' + (role==='user' ? ' user' : '');
+    b.innerHTML = esc(text);
+    wrap.appendChild(b);
 
-      addMessage(text, true);
-      input.value = "";
-      history.push({ role: "user", content: text });
+    document.getElementById('messages').appendChild(wrap);
+    document.getElementById('messages').scrollTop = 99999;
+  }
 
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: history })
-        });
-        const data = await res.json();
-        if (data.reply) {
-          addMessage(data.reply);
-          history.push({ role: "assistant", content: data.reply });
-        }
-      } catch (e) {
-        addMessage("Sorry, I'm having trouble connecting.");
-      }
+  function setLoading(on) {
+    busy = on;
+    document.getElementById('typing').style.display = on ? 'flex' : 'none';
+    document.getElementById('txt').disabled = on;
+    document.getElementById('send').disabled = on;
+    document.querySelectorAll('.qr').forEach(b => b.disabled = on);
+    if (on) document.getElementById('messages').scrollTop = 99999;
+  }
+
+  async function send(text) {
+    if (!text || busy) return;
+    document.getElementById('txt').value = '';
+    addMsg('user', text);
+    history.push({ role:'user', content:text });
+    setLoading(true);
+
+    try {
+      // ✅ Calls /api/chat on YOUR Vercel server — API key is safe on the server
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history }),
+      });
+
+      const data = await res.json();
+      const reply = data.reply || "Sorry, something went wrong. Please try again!";
+      history.push({ role:'assistant', content:reply });
+      addMsg('assistant', reply);
+    } catch {
+      addMsg('assistant', '⚠️ Connection error. Please try again!');
+    } finally {
+      setLoading(false);
+      document.getElementById('txt').focus();
     }
+  }
 
-    async function quickAction(type) {
-      if (type === 'book') {
-        addMessage("Great! Let me check Lana's availability for you 💇‍♀️", false);
-        
-        // Gọi API để tạo booking (demo)
-        try {
-          const res = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              messages: history,
-              action: "create_booking",
-              service: "Balayage",
-              name: "Client",
-              phone: "(432) 664-5845",
-              startTime: new Date(Date.now() + 86400000).toISOString() // tomorrow
-            })
-          });
-          const data = await res.json();
-          if (data.success) {
-            addMessage(data.message, false);
-          } else {
-            addMessage("Booking failed. Please try again.", false);
-          }
-        } catch (e) {
-          addMessage("Booking service is temporarily unavailable.", false);
-        }
-      }
-    }
-
-    function quickReply(text) {
-      document.getElementById('userInput').value = text;
-      sendMessage();
-    }
-
-    window.onload = () => {
-      addMessage(`Hi! I'm Lana's AI assistant 💇‍♀️<br>How can I help you today?`, false);
-    };
-  </script>
+  function sendInput() {
+    const v = document.getElementById('txt').value.trim();
+    if (v) send(v);
+  }
+</script>
 </body>
 </html>
+
